@@ -1,4 +1,4 @@
-# morank: Routines for metabolic pathway ranking through multiobjective optimization.
+# morank: multiobjective optimization-based ranking for metabolic pathway design.
 
 Pablo Carbonell, 2019
 
@@ -12,10 +12,10 @@ All of these are **conflicting objectives** and therefore it is not possible to 
 provides some expert criteria for preferencial decision. Defining such preference in the objectives requires a high level of 
 context information and expertise that is often hard to achieve.
 
-The routines here try to fill this next gap in metabolic pathway design through a **multiobjective optimization approach**. 
+The routines here address this need in metabolic pathway design through a **multiobjective optimization approach**. 
 Rather than asking for a prior preferential decision, the approach consists on analyzing the optimal properties of the 
 feasible space of solutions obtained by pathway enumeration. In that way, the progressive Pareto optimal fronts of the solutions
-are used in order to rank the pathway subpopulations. Within each group, either user-supplied or a global criteria based on the distance to 
-the ideal solution is applied in order to provide a full ordered set of pathway solutions.
+are used in order to rank the pathway subpopulations. Within each group, either user-supplied or a global criteria based on the 
+distance to the ideal solution is applied in order to provide the ordered set of pathway solutions.
 
 See the [notebook](Notes.ipynb) for detailed information and examples.
