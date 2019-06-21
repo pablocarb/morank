@@ -96,7 +96,7 @@ def rank(M,pref=None):
         - By Pareto front subpopulation
         - Distance to ideal vector
     """
-    distance = dist(M,pref) 
+    distance = dist(M,pref=pref) 
     fr, fix = fronts(M)
     strata = np.zeros(shape=len(distance),dtype=int)
     for i in np.arange(0,len(fix)):
@@ -115,8 +115,7 @@ def init(n=50,m=8):
         m = number of criteria """
         
     X = np.random.normal( size=(n,m) )
-    pref = np.ones( shape=(m,) )/m
-    return X, pref
+    return X
 
 def norm(X):
     mn = np.min( X, axis=0 )
@@ -124,31 +123,21 @@ def norm(X):
     return (X-mn)/(mx-mn)
 
 # In[]:
-    
-X, pref = init( 150,6 )
 
-Xn = regularization(X)
-Pa = Pareto(Xn)
-Fr,fix = fronts(Xn)
-ranking = rank(Xn)
+def example(): 
+    
+    X = init( 150,6 )
+    
+    Xn = regularization(X)
+    Pa = Pareto(Xn)
+    Fr,fix = fronts(Xn)
+    ranking = rank(Xn)
 
 # In[]:
 """ Example visualization for a 2-D case """
 
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
-
-X, pref = init( 20,2 )
-pref = np.random.random(len(pref))
-pref = pref/sum(pref)
-
-# In[]:
-
-
-Xn = regularization(X)
-Pa = Pareto(Xn)
-Fr,fix = fronts(Xn)
-ranking = rank(Xn,pref)
 
 def plotRanking(X, fix, ranking):
     """ Plots the Pareto fronts and the ranking.
@@ -167,12 +156,26 @@ def plotRanking(X, fix, ranking):
     for i in np.arange(0,len(ranking)):
         j = ranking[i]
         plt.text(Xp[j,0],Xp[j,1],str(i))
-    plt.xlabel('Criteria 1')
-    plt.ylabel('Criteria 2')
+    plt.xlabel('Criterion 1')
+    plt.ylabel('Criterion 2')
     plt.scatter(0,0,c='red',marker='*')
     plt.text(0,0,'ideal',color='red')
     plt.scatter(1,1,c='blue',marker='*')
     plt.text(1,1,'nadir',color='blue')
     plt.plot()
     
-plotRanking(Xn, fix, ranking)
+
+def example2d():
+    X = init( 20,2 )
+    pref = np.random.random(X.shape[1])
+    pref = pref/sum(pref)
+    Xn = regularization(X)
+    Pa = Pareto(Xn)
+    Fr,fix = fronts(Xn)
+    ranking = rank(Xn,pref)
+    plotRanking(Xn, fix, ranking)
+    
+    # In[]:
+    
+    
+
