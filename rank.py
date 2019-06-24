@@ -38,12 +38,13 @@ def nadir( X,obj='min' ):
 def normalize( X, ide, nad ):
     return (X-ide)/(nad-ide)
 
+
 def regularization(X):
-    Pa, pix = Pareto(X)
-    ide = ideal(Pa)
+    Pa = Pareto(X)
+    ide = ideal(Pa[0])
     nad = nadir(X)
     Xn = normalize( X,ide,nad )
-    return Xn    
+    return Xn  
 
 def Pareto(M):
     """ Calculate the set of non-dominated solution """
@@ -70,6 +71,7 @@ def Pareto(M):
     return M[ix,:], ix
 
 def fronts(M):
+    """ Compute the Pareto fronts """
     fr = []
     ixs = []
     fix = np.arange(0,M.shape[0])
@@ -96,7 +98,7 @@ def rank(M,pref=None):
         - By Pareto front subpopulation
         - Distance to ideal vector
     """
-    distance = dist(M,pref=pref) 
+    distance = dist(M,pref=np.abs(pref)) 
     fr, fix = fronts(M)
     strata = np.zeros(shape=len(distance),dtype=int)
     for i in np.arange(0,len(fix)):
@@ -122,16 +124,40 @@ def norm(X):
     mx = np.max( X, axis=0 )
     return (X-mn)/(mx-mn)
 
+def sanitize(X,pref):
+    """ Ignore constant and zero-pref columns
+    and convert all objectives to minimization"""
+    mask = np.sign( np.negative( pref ) )
+    M = np.array(X)*mask
+    ix = np.where( np.max(M,axis=0) - np.min(M,axis=0) > 0)[0]
+    M = M[:,ix]
+    pref = np.array(pref)[ix]
+    return M, pref
+     
+def rankPaths(X,pref):
+    """ Rank pathways
+        - X : decision matrix;
+        - pref : preference weights (sign>1 for maximize, sign<1 for minimize)
+    """
+    # Set minimization for all objectives
+    X, pref = sanitize(X,pref)
+    # Regularize in [0,1]
+    Xn = regularization(X)
+    # Rank pathways
+    ranking = rank(Xn,pref)
+    return ranking
+    
+
 # In[]:
 
 def example(): 
-    
-    X = init( 150,6 )
-    
-    Xn = regularization(X)
-    Pa = Pareto(Xn)
-    Fr,fix = fronts(Xn)
-    ranking = rank(Xn)
+    n = 150
+    m = 8
+    pref = np.random.uniform(low=-1,high=1,size=m)
+    pref = pref/sum(pref)
+    X = init( n,m )
+    ranking = rankPaths(X,pref)
+    return(ranking)
 
 # In[]:
 """ Example visualization for a 2-D case """
@@ -139,9 +165,13 @@ def example():
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 
-def plotRanking(X, fix, ranking):
+def plotRanking(Xn, pref, ranking):
     """ Plots the Pareto fronts and the ranking.
     PCA dimensionality reduction is used if d > 2 """
+    X = np.array(Xn)
+    minpref = np.negative( pref )
+    mask = np.sign( minpref )
+    Fr,fix = fronts(X*mask)
     if X.shape[1] > 2:       
         pca = PCA(n_components=2)
         pca.fit(X)
@@ -156,24 +186,31 @@ def plotRanking(X, fix, ranking):
     for i in np.arange(0,len(ranking)):
         j = ranking[i]
         plt.text(Xp[j,0],Xp[j,1],str(i))
-    plt.xlabel('Criterion 1')
-    plt.ylabel('Criterion 2')
-    plt.scatter(0,0,c='red',marker='*')
-    plt.text(0,0,'ideal',color='red')
-    plt.scatter(1,1,c='blue',marker='*')
-    plt.text(1,1,'nadir',color='blue')
+    try:
+        plt.xlabel(Xn.columns[0])
+        plt.ylabel(Xn.columns[1])
+    except:
+        plt.xlabel('Criterion 1')
+        plt.ylabel('Criterion 2')
+    mask = np.sign(np.negative(pref))
+    ide = ideal(X*mask)*mask
+    nad = nadir(X*mask)*mask
+    plt.scatter(ide[0],ide[1],c='red',marker='*')
+    plt.text(ide[0],ide[1],'ideal',color='red')
+    plt.scatter(nad[0],nad[1],c='blue',marker='*')
+    plt.text(nad[0],nad[1],'nadir',color='blue')
     plt.plot()
     
 
-def example2d():
-    X = init( 20,2 )
-    pref = np.random.random(X.shape[1])
-    pref = pref/sum(pref)
-    Xn = regularization(X)
-    Pa = Pareto(Xn)
-    Fr,fix = fronts(Xn)
-    ranking = rank(Xn,pref)
-    plotRanking(Xn, fix, ranking)
+#def example2d():
+if __name__ == '__main__':
+    n = 50
+    titer = np.random.uniform(size=50)
+    thermo = np.random.normal(-5,4,size=50)
+    X = pd.DataFrame({'Thermo':thermo,'Titer':titer})
+    pref = [-0.2,0.5]
+    ranking = rankPaths(X,pref)
+    plotRanking(X, pref, ranking)
     
     # In[]:
     
