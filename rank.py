@@ -154,6 +154,7 @@ def example():
     n = 150
     m = 8
     pref = np.random.uniform(low=-1,high=1,size=m)
+    pref[0] = 0
     pref = pref/sum(pref)
     X = init( n,m )
     ranking = rankPaths(X,pref)
